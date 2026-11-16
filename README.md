@@ -58,6 +58,24 @@ julia --project=scripts/preview -e 'using Pkg; Pkg.instantiate()'
 julia --project=scripts/preview scripts/preview/preview.jl --mode quick --example all
 ```
 
+## Manuscript figures
+
+The exact figure data used for the preprint, the standalone pgfplots sources and the rendered
+PDFs are included in [`figures/`](figures/). These are the publication figures; the Makie
+previews above are quicker diagnostic views of newly generated output.
+
+To rebuild all five PDFs, install a TeX distribution containing `latexmk`, `standalone`, TikZ
+and pgfplots, then run:
+
+```sh
+make figures
+```
+
+Temporary TeX files are kept under `figures/build/` and `figures/out/` and are ignored by Git.
+The rebuilt PDFs replace the tracked copies beside their `.tex` sources. The bundled CSV files
+under `figures/data/` are the fixed `preprint-v1` result snapshot; local reproduction runs
+continue to write to the ignored `output/` directory.
+
 ## Ant-foraging notation
 
 The code follows the manuscript notation. There are `N` foragers, `n` of which are at source

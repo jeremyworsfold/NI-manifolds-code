@@ -1,0 +1,4 @@
+# The Makefile passes -outdir=out so that figure PDFs can be copied beside their
+# sources. Keep LaTeX's auxiliary files in build/.
+$aux_dir = 'build';
+$emulate_aux = 1;

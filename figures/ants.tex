@@ -1,0 +1,260 @@
+% Ant-foraging path, stationary food-level density and residence survival.
+% Data are in data/ants-trajectory/ and data/ants-correction/.
+\documentclass[10pt, border = 2pt]{standalone}
+\usepackage{amsmath, amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{pgfplots}
+\pgfplotsset{compat = 1.18}
+\usepgfplotslibrary{groupplots}
+\usetikzlibrary{arrows.meta, calc}
+\input{paper-style}
+
+\def\pathdata{data/ants-trajectory}
+\def\data{data/ants-correction}
+\input{\data/params}
+
+\def\tmin{0.5}
+\def\tmax{12.5}
+\def\unitdelta{0.22}
+\def\densTop{1.6}
+
+\pgfplotsset{
+    traj/.style = {
+        paperaxis,
+        width = 6.0cm,
+        xmin = \tmin,
+        xmax = \tmax,
+        ylabel style = {align = center},
+        clip = true,
+    },
+    % Thin the bulk lattice while retaining the sharp boundary layers.
+    thinned/.style = {
+        line join = round,
+        unbounded coords = discard,
+        x filter/.code = {
+            \pgfmathparse{
+                or(
+                    or(\pgfmathresult < 0.04, \pgfmathresult > 0.96),
+                    mod(\coordindex, 4) == 0
+                ) ? \pgfmathresult : nan
+            }
+        },
+    },
+}
+
+\begin{document}
+\begin{tikzpicture}
+    % (a) Fraction at A and its remaining food
+    \begin{groupplot}[
+        traj,
+        group style = {
+            group name = ts,
+            group size = 1 by 2,
+            vertical sep = 0.3cm,
+            xlabels at = edge bottom,
+            xticklabels at = edge bottom,
+        },
+    ]
+    \nextgroupplot[
+        height = 1.8cm,
+        ymin = -0.05,
+        ymax = 1.05,
+        ytick = {0, 1},
+        ylabel = {fraction\\at A},
+    ]
+        \addplot[
+            shade,
+        ] table[
+            x = t,
+            y expr = 1.05*\thisrow{s},
+            col sep = comma,
+        ] {\pathdata/shade.csv} \closedcycle;
+        \addplot[
+            black!55,
+            line width = 0.4pt,
+        ] table[
+            x = t,
+            y = y,
+            col sep = comma,
+        ] {\pathdata/fraction.csv};
+
+    \nextgroupplot[
+        height = 3.0cm,
+        ymin = 0,
+        ymax = 1.15,
+        ytick = {0, 1},
+        ylabel = {food\\level $u$},
+        xlabel = {time ($1/\delta$)},
+    ]
+        \addplot[
+            shade,
+        ] table[
+            x = t,
+            y expr = 1.15*\thisrow{s},
+            col sep = comma,
+        ] {\pathdata/shade.csv} \closedcycle;
+        \addplot[
+            exactpath,
+        ] table[
+            x = t,
+            y = u,
+            col sep = comma,
+        ] {\pathdata/food.csv};
+        \addplot[
+            leadingline,
+            line width = 0.8pt,
+        ] table[
+            x = t,
+            y = u,
+            col sep = comma,
+        ] {\pathdata/reduced.csv};
+    \end{groupplot}
+
+    \coordinate (top) at (ts c1r1.north west);
+    \node[
+        sublabel,
+        anchor = north west,
+    ] at ($(top) + (-1.35, 0.42)$) {(a)};
+
+    % Shared key
+    \begin{scope}[shift = {($(top) + (-0.85, 0.3)$)}]
+        \fill[leading!8] (0, -0.1) rectangle (0.3, 0.1);
+        \node[keytext] at (0.3, 0) {at A};
+
+        \fill[black!16] (1.35, -0.08) rectangle (1.65, 0.08);
+        \draw[keyline, black!45] (1.35, 0) -- (1.65, 0);
+        \node[keytext] at (1.65, 0) {exact};
+
+        \draw[keyline, leading] (2.85, 0) -- (3.15, 0);
+        \node[keytext] at (3.15, 0) {leading order};
+
+        \draw[
+            keyline,
+            firstorder,
+            line width = 1.2pt,
+        ] (5.3, 0) -- (5.6, 0);
+        \node[keytext] at (5.6, 0) {first order};
+    \end{scope}
+
+    % (b) Stationary food-level density
+    \begin{axis}[
+        paperaxis,
+        name = dens,
+        at = {($(ts c1r1.north east) + (1.95cm, 0)$)},
+        anchor = north west,
+        width = 5.0cm,
+        height = 1.8cm,
+        xmin = 0,
+        xmax = 1,
+        ymin = 0,
+        ymax = \densTop,
+        xtick = {0, 0.25, 0.5, 0.75, 1},
+        ytick = {0, 0.5, 1, 1.5},
+        xlabel = {food level $u$},
+        ylabel = {$\tilde\rho(u)$},
+        unbounded coords = jump,
+    ]
+        \addplot[
+            draw = none,
+            fill = black!16,
+            thinned,
+            forget plot,
+        ] table[
+            x = u,
+            y = density,
+            col sep = comma,
+        ] {\data/exact.csv} \closedcycle;
+        \addplot[
+            correctedline,
+            thinned,
+            forget plot,
+        ] table[
+            x = u,
+            y = corrected,
+            col sep = comma,
+        ] {\data/density.csv};
+        \addplot[
+            leadingline,
+            thinned,
+            forget plot,
+        ] table[
+            x = u,
+            y = leading,
+            col sep = comma,
+        ] {\data/density.csv};
+    \end{axis}
+    \node[
+        sublabel,
+        anchor = north west,
+    ] at ($(dens.north west) + (-1.35, 0.42)$) {(b)};
+
+    % (c) Residence survival at A
+    \path let
+        \p1 = (dens.south),
+        \p2 = (ts c1r2.south)
+    in \pgfextra{
+        \pgfmathsetlengthmacro\survivalHeight{\y1 - \y2 - 1.05cm}
+        \global\let\survivalHeight\survivalHeight
+    };
+    \begin{axis}[
+        paperaxis,
+        name = surv,
+        at = {($(dens.south west) + (0, -1.05cm)$)},
+        anchor = north west,
+        width = 5.0cm,
+        height = \survivalHeight,
+        ymode = log,
+        xmin = 0,
+        xmax = \survivalSpan*\unitdelta,
+        ymin = 0.001,
+        ymax = 2.5,
+        xtick = {0, 2, 4, 6},
+        xlabel = {time ($1/\delta$)},
+        ylabel = {survival\\at A $S(t)$},
+        ylabel style = {align = center},
+    ]
+        \addplot[
+            black!50,
+            line width = 0.6pt,
+            dotted,
+            domain = 0:\survivalSpan*\unitdelta,
+            samples = 50,
+            forget plot,
+        ] {exp(-x/(\meanResidenceA*\unitdelta))};
+        \addplot[
+            correctedline,
+            forget plot,
+        ] table[
+            x expr = \thisrow{t}*\unitdelta,
+            y = correctedA,
+            col sep = comma,
+        ] {\data/survival.csv};
+        \addplot[
+            exactmark,
+            each nth point = 30,
+            forget plot,
+        ] table[
+            x expr = \thisrow{t}*\unitdelta,
+            y = exactA,
+            col sep = comma,
+        ] {\data/survival.csv};
+
+        \path
+            (axis cs: 4.9, {exp(-4.9/(\meanResidenceA*\unitdelta))})
+            --
+            (axis cs: 6.3, {exp(-6.3/(\meanResidenceA*\unitdelta))})
+            node[
+                midway,
+                sloped,
+                above,
+                font = \figtick,
+                text = black!55,
+                inner sep = 1.5pt,
+            ] {exponential};
+    \end{axis}
+    \node[
+        sublabel,
+        anchor = north west,
+    ] at ($(surv.north west) + (-1.35, 0)$) {(c)};
+\end{tikzpicture}
+\end{document}

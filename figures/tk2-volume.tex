@@ -1,0 +1,116 @@
+% Finite-volume error of the smoothed TK2 reduction.
+% Data are in data/tk2-correction/.
+\documentclass[10pt, border = 2pt]{standalone}
+\usepackage{amsmath, amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{pgfplots}
+\pgfplotsset{compat = 1.18}
+\usetikzlibrary{arrows.meta, calc}
+\input{paper-style}
+
+\def\data{data/tk2-correction}
+\input{\data/params}
+
+\pgfplotsset{
+    errline/.style = {
+        mark = x,
+        mark size = 2.3pt,
+        mark options = {solid, line width = 0.9pt},
+    },
+}
+
+\begin{document}
+\begin{tikzpicture}
+    \begin{axis}[
+        paperaxis,
+        name = errd,
+        width = 5.75cm,
+        height = 3.6cm,
+        xmode = log,
+        ymode = log,
+        xmin = \muAxisMin,
+        xmax = \muAxisMax,
+        xtick = {0.001, 0.002, 0.005, 0.01, 0.02},
+        xticklabels = {0.001, 0.002, 0.005, 0.01, 0.02},
+        ymin = \muErrorMin,
+        ymax = \muErrorMax,
+        yminorticks = true,
+        xlabel = {$\mu = 1/V$},
+        ylabel = {$W_1$ error},
+        legend style = {
+            at = {(1.03, 0.5)},
+            anchor = west,
+            draw = none,
+            fill = none,
+            font = \figtick,
+            legend columns = 1,
+        },
+        legend cell align = left,
+    ]
+        \addlegendimage{leadingline}
+        \addlegendentry{$O(1)$}
+        \addlegendimage{correctedline}
+        \addlegendentry{$O(\varepsilon)$}
+        \addlegendimage{black!70, dashed, line width = 0.8pt}
+        \addlegendentry{$\varepsilon = \muErrorEpsOne$}
+        \addlegendimage{black!70, line width = 0.8pt}
+        \addlegendentry{$\varepsilon = \muErrorEpsTwo$}
+
+        % Unit-slope guide through the asymptotic regime.
+        \addplot[
+            black!40,
+            line width = 0.5pt,
+            domain = \muGuideX/10:\muGuideX,
+            samples = 2,
+            forget plot,
+        ] {\muGuideY*(x/\muGuideX)};
+        \node[
+            font = \figtick,
+            text = black!55,
+            anchor = north west,
+        ] at (
+            axis cs: \muGuideX/8,
+            {\muGuideY*0.125}
+        ) {$\mu$};
+
+        \addplot[
+            leadingline,
+            errline,
+            dashed,
+            forget plot,
+        ] table[
+            x = mu,
+            y = leadingone,
+            col sep = comma,
+        ] {\data/errors-mu.csv};
+        \addplot[
+            correctedline,
+            errline,
+            dashed,
+            forget plot,
+        ] table[
+            x = mu,
+            y = correctedone,
+            col sep = comma,
+        ] {\data/errors-mu.csv};
+        \addplot[
+            leadingline,
+            errline,
+            forget plot,
+        ] table[
+            x = mu,
+            y = leadingtwo,
+            col sep = comma,
+        ] {\data/errors-mu.csv};
+        \addplot[
+            correctedline,
+            errline,
+            forget plot,
+        ] table[
+            x = mu,
+            y = correctedtwo,
+            col sep = comma,
+        ] {\data/errors-mu.csv};
+    \end{axis}
+\end{tikzpicture}
+\end{document}

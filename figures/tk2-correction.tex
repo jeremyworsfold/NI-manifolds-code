@@ -1,0 +1,308 @@
+% TK2 stationary densities, mean composition and reduction error.
+% Data are in data/tk2-correction/.
+\documentclass[10pt, border = 2pt]{standalone}
+\usepackage{amsmath, amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{pgfplots}
+\pgfplotsset{compat = 1.18}
+\usetikzlibrary{arrows.meta, calc}
+\input{paper-style}
+
+\def\data{data/tk2-correction}
+\input{\data/params}
+
+\pgfplotsset{
+    density/.style = {
+        paperaxis,
+        width = 5.6cm,
+        height = 3.4cm,
+        xmin = \sAxisMin,
+        xmax = \sAxisMax,
+        ymin = 0,
+        xtick = {0.5, 1, 1.5},
+        ylabel = {$\tilde\rho(s)$},
+    },
+    epsaxis/.style = {
+        xmin = \epsAxisMin,
+        xmax = \epsAxisMax,
+        xtick = {0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2},
+        xticklabels = {0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2},
+        xlabel = {$\varepsilon$},
+    },
+    erroraxis/.style = {
+        paperaxis,
+        width = 5.75cm,
+        height = 3.05cm,
+        ylabel = {$W_1$ error},
+        yminorticks = true,
+    },
+    errline/.style = {
+        mark = x,
+        mark size = 2.3pt,
+        mark options = {solid, line width = 0.9pt},
+    },
+}
+
+\begin{document}
+\begin{tikzpicture}
+    % (a) Stationary densities at two epsilon values
+    \begin{axis}[
+        density,
+        name = densa,
+        ymax = \densityMaxA,
+        xticklabels = {},
+    ]
+        \addplot[
+            exactfill,
+        ] table[
+            x = s,
+            y = density,
+            col sep = comma,
+        ] {\data/exact-a.csv} \closedcycle;
+        \addplot[
+            correctedline,
+        ] table[
+            x = s,
+            y = corrected,
+            col sep = comma,
+        ] {\data/density-a.csv};
+        \addplot[
+            leadingline,
+        ] table[
+            x = s,
+            y = leading,
+            col sep = comma,
+        ] {\data/density-a.csv};
+        \node[
+            font = \figtick,
+            anchor = north west,
+        ] at (rel axis cs: 0.02, 0.98) {$\varepsilon = \epsRowA$};
+    \end{axis}
+
+    \begin{axis}[
+        density,
+        name = densb,
+        at = {($(densa.south west) + (0, -0.25cm)$)},
+        anchor = north west,
+        ymax = \densityMaxB,
+        xlabel = {total $s$},
+    ]
+        \addplot[
+            exactfill,
+        ] table[
+            x = s,
+            y = density,
+            col sep = comma,
+        ] {\data/exact-b.csv} \closedcycle;
+        \addplot[
+            correctedline,
+        ] table[
+            x = s,
+            y = corrected,
+            col sep = comma,
+        ] {\data/density-b.csv};
+        \addplot[
+            leadingline,
+        ] table[
+            x = s,
+            y = leading,
+            col sep = comma,
+        ] {\data/density-b.csv};
+        \node[
+            font = \figtick,
+            anchor = north west,
+        ] at (rel axis cs: 0.02, 0.98) {$\varepsilon = \epsRowB$};
+    \end{axis}
+    \node[
+        sublabel,
+        anchor = north west,
+    ] at ($(densa.north west) + (-1.05, 0)$) {(a)};
+
+    % (b) Mean relative composition
+    \begin{axis}[
+        paperaxis,
+        epsaxis,
+        name = mean,
+        at = {($(densa.north east) + (1.55cm, 0)$)},
+        anchor = north west,
+        width = 5.75cm,
+        height = 2.0cm,
+        xmode = log,
+        ymin = \meanYMin,
+        ymax = \meanYMax,
+        ylabel = {$\langle m\rangle$},
+        yticklabel style = {
+            /pgf/number format/fixed,
+            /pgf/number format/precision = 2,
+        },
+        legend style = {
+            at = {(0.03, 0.04)},
+            anchor = south west,
+            draw = none,
+            fill = white,
+            fill opacity = 0.85,
+            text opacity = 1,
+            font = \figtick,
+            legend columns = 1,
+            row sep = -1pt,
+        },
+        legend cell align = left,
+    ]
+        \addlegendimage{exactlegend}
+        \addlegendentry{exact}
+        \addlegendimage{leadingline}
+        \addlegendentry{$O(1)$}
+        \addlegendimage{correctedline}
+        \addlegendentry{$O(\varepsilon)$}
+
+        \draw[
+            black!22,
+            line width = 0.4pt,
+        ] (axis cs: \epsRowA, \meanYMin)
+            -- (axis cs: \epsRowA, \meanYMax);
+        \draw[
+            black!22,
+            line width = 0.4pt,
+        ] (axis cs: \epsRowB, \meanYMin)
+            -- (axis cs: \epsRowB, \meanYMax);
+
+        \addplot[
+            correctedline,
+            forget plot,
+        ] table[
+            x = epsilon,
+            y = y,
+            col sep = comma,
+        ] {\data/mean-corrected.csv};
+        \addplot[
+            leadingline,
+            domain = \epsAxisMin:\epsAxisMax,
+            samples = 2,
+            forget plot,
+        ] {\leadingMeanY};
+        \addplot[
+            exactmark,
+            forget plot,
+        ] table[
+            x = epsilon,
+            y = y,
+            col sep = comma,
+        ] {\data/mean-exact.csv};
+    \end{axis}
+    \node[
+        sublabel,
+        anchor = north west,
+    ] at ($(mean.north west) + (-1.05, 0)$) {(b)};
+
+    % (c) Wasserstein error at two volumes
+    \path let
+        \p1 = (mean.south),
+        \p2 = (densb.south)
+    in \pgfextra{
+        \pgfmathsetlengthmacro\errHeight{\y1 - \y2 - 1.15cm}
+        \global\let\errHeight\errHeight
+    };
+    \begin{axis}[
+        erroraxis,
+        epsaxis,
+        name = errc,
+        at = {($(mean.south west) + (0, -1.15cm)$)},
+        anchor = north west,
+        height = \errHeight,
+        xmode = log,
+        ymode = log,
+        ymin = \epsErrorMin,
+        ymax = \epsErrorMax,
+        legend style = {
+            at = {(0.03, 0.97)},
+            anchor = north west,
+            draw = none,
+            fill = none,
+            font = \figtick,
+            legend columns = 1,
+        },
+        legend cell align = left,
+    ]
+        \addlegendimage{black!70, dashed, line width = 0.8pt}
+        \addlegendentry{$V = \errorVolumeOne$}
+        \addlegendimage{black!70, line width = 0.8pt}
+        \addlegendentry{$V = \errorVolumeTwo$}
+
+        % Reference lines have slopes one and two.
+        \addplot[
+            black!40,
+            line width = 0.5pt,
+            domain = \epsGuideX/10:\epsGuideX,
+            samples = 2,
+            forget plot,
+        ] {\leadingGuideY*(x/\epsGuideX)};
+        \addplot[
+            black!40,
+            line width = 0.5pt,
+            domain = \epsGuideX/10:\epsGuideX,
+            samples = 2,
+            forget plot,
+        ] {\correctedGuideY*(x/\epsGuideX)^2};
+
+        \node[
+            font = \figtick,
+            text = black!55,
+            anchor = north west,
+        ] at (
+            axis cs: \epsGuideX/3.16,
+            \leadingGuideY/3.16
+        ) {$\varepsilon$};
+        \node[
+            font = \figtick,
+            text = black!55,
+            anchor = north west,
+        ] at (
+            axis cs: \epsGuideX/3.16,
+            \correctedGuideY/10
+        ) {$\varepsilon^2$};
+
+        \addplot[
+            leadingline,
+            errline,
+            dashed,
+            forget plot,
+        ] table[
+            x = epsilon,
+            y = leadingone,
+            col sep = comma,
+        ] {\data/errors-epsilon.csv};
+        \addplot[
+            correctedline,
+            errline,
+            dashed,
+            forget plot,
+        ] table[
+            x = epsilon,
+            y = correctedone,
+            col sep = comma,
+        ] {\data/errors-epsilon.csv};
+        \addplot[
+            leadingline,
+            errline,
+            forget plot,
+        ] table[
+            x = epsilon,
+            y = leadingtwo,
+            col sep = comma,
+        ] {\data/errors-epsilon.csv};
+        \addplot[
+            correctedline,
+            errline,
+            forget plot,
+        ] table[
+            x = epsilon,
+            y = correctedtwo,
+            col sep = comma,
+        ] {\data/errors-epsilon.csv};
+    \end{axis}
+    \node[
+        sublabel,
+        anchor = north west,
+    ] at ($(errc.north west) + (-1.05, 0)$) {(c)};
+\end{tikzpicture}
+\end{document}

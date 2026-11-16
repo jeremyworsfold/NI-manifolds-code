@@ -1,0 +1,219 @@
+% Leading-order TK2 path in time and on the two noise-induced manifolds.
+% Data are in data/tk2-leading/.
+\documentclass[10pt, border = 2pt]{standalone}
+\usepackage{amsmath, amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{pgfplots}
+\pgfplotsset{compat = 1.18}
+\usetikzlibrary{arrows.meta, calc, decorations.pathmorphing}
+\input{paper-style}
+
+\def\data{data/tk2-leading}
+\input{\data/params}
+
+\begin{document}
+\begin{tikzpicture}
+    % (a) Total population along a sampled PDMP path
+    \begin{axis}[
+        paperaxis,
+        name = trace,
+        width = 8.0cm,
+        height = 3.3cm,
+        xmin = 0,
+        xmax = \pathEndTime,
+        ymin = 0.55,
+        ymax = 1.8,
+        ytick = {1, 1.5},
+        xlabel = {time $t$},
+        ylabel = {total $s$},
+        clip = false,
+    ]
+        \addplot[
+            shade,
+        ] table[
+            x = t,
+            y expr = 0.55 + 1.25*\thisrow{plus},
+            col sep = comma,
+        ] {\data/path.csv} \closedcycle;
+
+        \draw[
+            black!40,
+            dashed,
+            line width = 0.4pt,
+        ] (axis cs: 0, \fixedPointPlus)
+            -- (axis cs: \pathEndTime, \fixedPointPlus);
+        \draw[
+            black!40,
+            dashed,
+            line width = 0.4pt,
+        ] (axis cs: 0, \fixedPointMinus)
+            -- (axis cs: \pathEndTime, \fixedPointMinus);
+        \node[
+            font = \figtick,
+            anchor = west,
+        ] at (axis cs: \pathEndTime, \fixedPointPlus) {$s^*_+$};
+        \node[
+            font = \figtick,
+            anchor = west,
+        ] at (axis cs: \pathEndTime, \fixedPointMinus) {$s^*_-$};
+
+        \addplot[
+            leadingline,
+            line width = 1.2pt,
+        ] table[
+            x = t,
+            y = s,
+            col sep = comma,
+        ] {\data/path.csv};
+        \addplot[
+            only marks,
+            mark = *,
+            mark size = 2pt,
+            mark options = {
+                fill = stateorange,
+                draw = white,
+                line width = 0.5pt,
+            },
+            restrict expr to domain = {\coordindex}{0:2},
+        ] table[
+            x = t1,
+            y = s1,
+            col sep = comma,
+        ] {\data/residences.csv};
+    \end{axis}
+    \node[
+        sublabel,
+        anchor = base west,
+    ] at ($(trace.north west) + (-1.1, 0.3)$) {(a)};
+
+    % (b) Two manifolds and the first two switches
+    \begin{scope}[
+        shift = {($(trace.south east) + (1.55, 0)$)},
+        x = 1.8cm,
+        y = 1.8cm,
+    ]
+        \begin{scope}
+            \clip (0, 0) rectangle (1.9, 1.9);
+            \foreach \s in {0.25, 0.5, ..., 1.75} {
+                \draw[fibre] (0, \s) -- (\s, 0);
+            }
+        \end{scope}
+        \node[
+            font = \figtick,
+            text = black!45,
+            rotate = -45,
+            anchor = south,
+            inner sep = 1.5pt,
+        ] at (1.1, 0.65) {$x_+ + x_- = s$};
+
+        % Axes and manifolds
+        \draw[black!45, line width = 0.4pt, ->] (0, 0) -- (2.0, 0);
+        \draw[black!45, line width = 0.4pt, ->] (0, 0) -- (0, 2.0);
+        \node[
+            font = \figlabel,
+            text = black!80,
+            anchor = north,
+        ] at (2.0, -0.03) {$x_+$};
+        \node[
+            font = \figlabel,
+            text = black!80,
+            anchor = south,
+        ] at (0, 2.0) {$x_-$};
+        \draw[black!45]
+            (1, 0)
+            --
+            (1, -0.04)
+            node[
+                font = \figtick,
+                text = black!70,
+                anchor = north,
+            ] {$1$};
+        \draw[black!45]
+            (0, 1)
+            --
+            (-0.04, 1)
+            node[
+                font = \figtick,
+                text = black!70,
+                anchor = east,
+            ] {$1$};
+        \draw[manifold] (0, 0) -- (1.9, 0);
+        \draw[manifold] (0, 0) -- (0, 1.9);
+        \node[
+            font = \figlabel,
+            text = leading,
+            anchor = south,
+        ] at (1.82, 0.04) {$\Gamma_+$};
+        \node[
+            font = \figlabel,
+            text = leading,
+            anchor = west,
+        ] at (0.04, 1.82) {$\Gamma_-$};
+
+        % Slow flow between the two fixed points
+        \draw[slowarrow]
+            (\fixedPointMinus - 0.1, 0)
+            --
+            (\fixedPointPlus + 0.12, 0);
+        \draw[slowarrow]
+            (0, \fixedPointPlus + 0.1)
+            --
+            (0, \fixedPointMinus - 0.12);
+
+        \pgfplotstableread[
+            col sep = comma,
+        ]{\data/residences.csv}\residences
+        \pgfplotstablegetelem{0}{s0}\of\residences
+        \let\sstart\pgfplotsretval
+        \pgfplotstablegetelem{0}{s1}\of\residences
+        \let\swone\pgfplotsretval
+        \pgfplotstablegetelem{1}{s1}\of\residences
+        \let\swtwo\pgfplotsretval
+
+        \draw[noisyarrow] (\swone, 0) -- (0, \swone);
+        \draw[noisyarrow] (0, \swtwo) -- (\swtwo, 0);
+        \node[state] at (\sstart, 0) {};
+        \node[state] at (\swone, 0) {};
+        \node[state] at (0, \swone) {};
+        \node[state] at (0, \swtwo) {};
+        \node[state] at (\swtwo, 0) {};
+        \node[fixedpt] at (\fixedPointPlus, 0) {};
+        \node[fixedpt] at (0, \fixedPointMinus) {};
+        \node[
+            font = \figtick,
+            anchor = north,
+        ] at (\fixedPointPlus, -0.05) {$s^*_+$};
+        \node[
+            font = \figtick,
+            anchor = east,
+        ] at (-0.05, \fixedPointMinus) {$s^*_-$};
+
+        % Shared key
+        \begin{scope}[
+            shift = {(0.95, 1.9)},
+            x = 1cm,
+            y = 1cm,
+        ]
+            \fill[leading!8] (0, -0.08) rectangle (0.3, 0.08);
+            \node[keytext] at (0.3, 0) {on $\Gamma_+$};
+
+            \draw[
+                keyline,
+                leading,
+                line width = 1.2pt,
+            ] (0, -0.33) -- (0.3, -0.33);
+            \node[keytext] at (0.3, -0.33) {PDMP};
+
+            \node[
+                state,
+                minimum size = 0.17cm,
+            ] at (0.15, -0.66) {};
+            \node[keytext] at (0.3, -0.66) {switch};
+        \end{scope}
+    \end{scope}
+    \node[
+        sublabel,
+        anchor = base west,
+    ] at ($(trace.north east) + (0.75, 0.3)$) {(b)};
+\end{tikzpicture}
+\end{document}

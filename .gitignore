@@ -7,5 +7,7 @@ output/*
 *.jl.*.cov
 *.jl.mem
 docs/build/
+figures/build/
+figures/out/
 
 Manifest.toml

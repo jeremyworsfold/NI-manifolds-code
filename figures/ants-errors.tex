@@ -1,0 +1,162 @@
+% Ant-foraging errors: Wasserstein distance and signed residence-survival error.
+% Data are in data/ants-correction/ and data/ants-residuals/.
+\documentclass[10pt, border = 2pt]{standalone}
+\usepackage{amsmath, amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{pgfplots}
+\pgfplotsset{compat = 1.18}
+\usetikzlibrary{arrows.meta, calc}
+\input{paper-style}
+
+\def\data{data/ants-correction}
+\input{\data/params}
+
+\def\unitdelta{0.22}
+\def\errEpsMin{0.002}
+\def\errEpsMax{0.25}
+\def\errMin{5e-6}
+\def\errMax{1e-2}
+\def\errGuideX{0.2}
+\def\leadingGuideY{2.3e-3}
+\def\correctedGuideY{1.1e-4}
+
+\pgfplotsset{
+    errline/.style = {
+        mark = x,
+        mark size = 2.3pt,
+        mark options = {solid, line width = 0.9pt},
+    },
+}
+
+\begin{document}
+\begin{tikzpicture}
+    % (a) Wasserstein error against epsilon
+    \begin{axis}[
+        paperaxis,
+        name = err,
+        width = 4.2cm,
+        height = 3.2cm,
+        xmode = log,
+        ymode = log,
+        xmin = \errEpsMin,
+        xmax = \errEpsMax,
+        xtick = {0.002, 0.01, 0.05, 0.2},
+        xticklabels = {0.002, 0.01, 0.05, 0.2},
+        ymin = \errMin,
+        ymax = \errMax,
+        yminorticks = true,
+        xlabel = {$\varepsilon$},
+        ylabel = {$W_1$ error},
+        legend style = {
+            at = {(0.03, 0.97)},
+            anchor = north west,
+            draw = none,
+            fill = none,
+            font = \figtick,
+            legend columns = 1,
+        },
+        legend cell align = left,
+    ]
+        % Reference lines have slopes one and two.
+        \addplot[
+            black!40,
+            line width = 0.5pt,
+            domain = \errGuideX/10:\errGuideX,
+            samples = 2,
+            forget plot,
+        ] {\leadingGuideY*(x/\errGuideX)};
+        \addplot[
+            black!40,
+            line width = 0.5pt,
+            domain = \errGuideX/10:\errGuideX,
+            samples = 2,
+            forget plot,
+        ] {\correctedGuideY*(x/\errGuideX)^2};
+
+        \node[
+            font = \figtick,
+            text = black!55,
+            anchor = north west,
+        ] at (
+            axis cs: \errGuideX/3.16,
+            \leadingGuideY/3.16
+        ) {$\varepsilon$};
+        \node[
+            font = \figtick,
+            text = black!55,
+            anchor = west,
+        ] at (
+            axis cs: \errGuideX/1.8,
+            \correctedGuideY/8
+        ) {$\varepsilon^2$};
+
+        \addplot[
+            leadingline,
+            errline,
+        ] table[
+            x = epsilon,
+            y = leading,
+            col sep = comma,
+        ] {\data/errors-epsilon.csv};
+        \addlegendentry{leading order}
+
+        \addplot[
+            correctedline,
+            errline,
+        ] table[
+            x = epsilon,
+            y = corrected,
+            col sep = comma,
+        ] {\data/errors-epsilon.csv};
+        \addlegendentry{first order}
+    \end{axis}
+    \node[
+        sublabel,
+        anchor = north west,
+    ] at ($(err.north west) + (-1.2, 0)$) {(a)};
+
+    % (b) Signed residence-survival error
+    \begin{axis}[
+        paperaxis,
+        name = res,
+        at = {($(err.north east) + (1.6cm, 0)$)},
+        anchor = north west,
+        width = 4.6cm,
+        height = 3.2cm,
+        xmin = 0,
+        xmax = \survivalSpan*\unitdelta,
+        xtick = {0, 2, 4, 6},
+        ymin = -5.5,
+        ymax = 1.5,
+        ytick = {-4, -2, 0},
+        xlabel = {time ($1/\delta$)},
+        ylabel = {$\Delta S$ ($\times 10^{-3}$)},
+    ]
+        \draw[
+            black!30,
+            line width = 0.3pt,
+        ] (axis cs: 0, 0) -- (axis cs: \survivalSpan*\unitdelta, 0);
+
+        \addplot[
+            leadingline,
+            line width = 0.8pt,
+        ] table[
+            x expr = \thisrow{t}*\unitdelta,
+            y = leadingA,
+            col sep = comma,
+        ] {data/ants-residuals/residuals.csv};
+        \addplot[
+            correctedline,
+            line width = 1.0pt,
+        ] table[
+            x expr = \thisrow{t}*\unitdelta,
+            y = correctedA,
+            col sep = comma,
+        ] {data/ants-residuals/residuals.csv};
+    \end{axis}
+    \node[
+        sublabel,
+        anchor = north west,
+    ] at ($(res.north west) + (-1.2, 0)$) {(b)};
+\end{tikzpicture}
+\end{document}
