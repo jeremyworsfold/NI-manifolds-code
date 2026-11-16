@@ -1,6 +1,7 @@
 # Noise-induced manifolds: manuscript code
 
-Julia code accompanying the manuscript *Noise Induced Manifolds: reducing SDEs to PDMPs*.
+Julia code accompanying the manuscript *Noise-induced manifolds: reduction of slow–fast SDEs
+to switching processes*.
 The repository contains the two models used in the paper:
 
 - `NIManifoldsCode.TK2`: the two-species Togashi--Kaneko model; and
