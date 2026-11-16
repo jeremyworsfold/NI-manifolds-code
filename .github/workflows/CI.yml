@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        julia-version: ['1.11', '1.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.julia-version }}
+      - uses: julia-actions/cache@v2
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+
+  reproduce:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.12'
+      - uses: julia-actions/cache@v2
+      - name: Instantiate scripts
+        run: julia --project=scripts -e 'using Pkg; Pkg.instantiate()'
+      - name: Reproduction smoke tests
+        run: julia --project=scripts scripts/reproduce.jl --mode quick --example all
+      - name: Preview smoke tests
+        run: |
+          julia --project=scripts/preview -e 'using Pkg; Pkg.instantiate()'
+          julia --project=scripts/preview scripts/preview/preview.jl --mode quick --example all

@@ -1,0 +1,11 @@
+.DS_Store
+.vscode/
+.obsidian
+output/*
+!output/.gitkeep
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+docs/build/
+
+Manifest.toml

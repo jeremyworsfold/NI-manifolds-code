@@ -1,0 +1,38 @@
+# Settings for scripts/ants.jl. Each key is documented in the docstrings of
+# `AntsModelConfig` ([model]) and `AntsSettings` ([quick], [full]) in that script.
+
+[model]
+foragers = 200
+omega0 = 0.02
+omega1 = 0.2
+delta = 0.22
+
+[quick]
+food_steps = 500
+epsilon_panel = 0.1
+epsilon_sweep = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2]
+survival_points = 121
+survival_span = 4.0
+survival_substeps = 4
+merged_horizon = 2e6
+merged_seed = 1
+residence_epsilons = [0.025, 0.05, 0.1]
+sweep_food_steps = 1000
+trajectory_seed = 101
+trajectory_duration = 40.0
+trajectory_step = 0.02
+
+[full]
+food_steps = 2000
+epsilon_panel = 0.1
+epsilon_sweep = [0.0025, 0.005, 0.01, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2]
+survival_points = 301
+survival_span = 4.0
+survival_substeps = 4
+merged_horizon = 4e6
+merged_seed = 1
+residence_epsilons = [0.025, 0.05, 0.1]
+sweep_food_steps = 8000
+trajectory_seed = 101
+trajectory_duration = 40.0
+trajectory_step = 0.02

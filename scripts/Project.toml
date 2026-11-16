@@ -1,0 +1,12 @@
+[deps]
+Configurations = "5218b696-f38b-4ac9-8b61-a12ec717816d"
+NIManifoldsCode = "d3bfa8ef-e941-422c-ae40-c834a42c3f20"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+
+[sources]
+NIManifoldsCode = {path = ".."}
+
+[compat]
+Configurations = "0.17"
+julia = "1.11"

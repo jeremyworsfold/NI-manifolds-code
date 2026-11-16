@@ -1,0 +1,36 @@
+# Settings for scripts/tk2.jl. Each key is documented in the docstrings of `TK2ModelConfig`
+# ([model]) and `TK2Settings` ([quick], [full]) in that script.
+
+[model]
+kappa = 0.4
+beta = -0.2
+
+[quick]
+population = 40
+points = 260
+epsilon_plot_min = 0.004
+epsilon_plot_max = 0.22
+exact_points_per_decade = 10
+curve_points = 100
+epsilon_rows = [0.02, 0.2]
+cutoff_sigma = 8.0
+cutoff_extra = 20
+error_epsilons = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2]
+error_populations_epsilon = [10, 80]
+error_populations_mu = [10, 20, 40, 80]
+error_mu_epsilons = [0.002, 0.02]
+
+[full]
+population = 100
+points = 500
+epsilon_plot_min = 0.002
+epsilon_plot_max = 0.22
+exact_points_per_decade = 10
+curve_points = 300
+epsilon_rows = [0.02, 0.2]
+cutoff_sigma = 10.0
+cutoff_extra = 40
+error_epsilons = [0.002, 0.003, 0.005, 0.0075, 0.01, 0.015, 0.02, 0.03, 0.05, 0.075, 0.1, 0.15, 0.2]
+error_populations_epsilon = [50, 800]
+error_populations_mu = [25, 50, 100, 200, 400, 800]
+error_mu_epsilons = [0.002, 0.02]
